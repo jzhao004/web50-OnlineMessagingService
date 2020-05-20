@@ -1,0 +1,244 @@
+<html>
+<head>
+  <title> Flack </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+  <style>
+  html, body{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: #f1f3f2;
+  }
+
+  #channels-header{
+    display: flex;
+    flex-direction: row;
+    height: 60px;
+    background-color: #272424;
+    text-align: center;
+    align-items: center;
+  }
+
+  #channel-name{
+    width: 100%;
+    font-size: 120%;
+    font-weight: bold;
+    color: #f1f3f2;
+  }
+
+  #channels-main {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1;
+    overflow-y: auto;
+  }
+
+  #channels-side {
+    display:flex;
+    flex-direction: column;
+    width: 250px;
+    padding: 25px 15px 25px 15px;
+    background-color: #c2d3da;
+    color: #272424;
+  }
+
+  #welcome-message {
+    font-size: 110%;
+    font-weight: bold;
+    padding-left: 3px;
+  }
+
+  #new-channel {
+    height: 50px;
+    font-size: 35px;
+    color: #272424;;
+    cursor: default;
+  }
+
+  #create-channel {
+    display: none;
+    align-self: flex-start;
+    z-index: 3;
+    width: 220px;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: #585a56;
+    color: #f1f3f2;
+  }
+
+  #create-channel input {
+    height: 32px;
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+    margin: 10px 0px 5px 0px;
+    padding: 0px 8px;
+    font-size: 90%;
+    color: #272424;
+  }
+
+  #create-channel input::placeholder {
+    color: #585a56;
+  }
+
+  #create-channel button {
+    height: 32px;
+    width: 60px;
+    border: none;
+    border-radius: 5px;
+    background-color: #f1f3f2;
+    font-size: 90%;
+    color: #272424;
+  }
+
+  #create-error {
+    margin-bottom: 10px;
+    font-size: 90%;
+  }
+
+  #search-channels input {
+    height: 32px;
+    width: 160px;
+    margin: 10px 0px 5px 0px;
+    padding: 0px 8px;
+    border: none;
+    border-radius: 5px;
+    color: #272424;
+  }
+
+  #search-channels input::placeholder {
+    color: #585a56;
+  }
+
+  #search-channels button {
+    height: 32px;
+    width: 36px;
+    border: none;
+    border-radius: 5px;
+    background-color: #f1f3f2;
+    color: #272424;
+  }
+
+  #all-channels, #joined-channels, #signout a {
+    align-self: flex-start;
+    padding: 3px;
+    color: #272424;
+    cursor: default;
+  }
+
+  #new-channel:hover, #all-channels:hover, #joined-channels:hover, #signout a:hover {
+    color: #585a56;
+    text-decoration: none;
+  }
+
+  #channels-center {
+    flex: 1 1;
+    background-color: #f1f3f2;
+    padding: 15px;
+  }
+
+  table, td {
+    width: 100%;
+    border-bottom: 1px solid #272424;
+    border-collapse: collapse;
+    padding: 10px
+  }
+
+  table a {
+    color: #272424;
+  }
+
+  table a:hover {
+    color: #585a56;
+  }
+  </style>
+
+  <script>
+  localStorage.clear();
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // Control create channel pop up form
+    var display = false;
+    document.getElementById('new-channel').onclick = ()=>{
+      if (!display){
+        document.getElementById('create-channel').style.display = 'block';
+        display = true;
+      } else {
+        document.getElementById('create-channel').style.display = 'none';
+        display = false;
+        document.getElementById('create-error').innerHTML = null;
+      }
+    }
+
+    var exist = "{{ exist }}"
+    if (exist){
+      document.getElementById('create-channel').style.display = 'block';
+    }
+
+    // Display all channels
+    document.getElementById('all-channels').onclick = ()=>{
+      window.location.href='{{ url_for('channels') }}';
+    }
+  });
+  </script>
+</head>
+
+<body>
+  <div id="channels-header">
+    <span id="channel-name">Channels</span>
+  </div>
+
+  <div id="channels-main">
+    <div id="channels-side">
+      <span id="welcome-message">Hello {{ displayname }}!</span>
+
+      <!-- Create new channel -->
+      <div id="new-channel">&#x2b;</div>
+
+      <form id="create-channel" action="{{ url_for('channels') }}", method="post">
+        <b> New Channel </b>
+
+        <input name="channelname" autofocus placeholder="Enter channel name" autocomplete=off required>
+
+        <div id="create-error">
+          {% if exist %}
+          Channel exists
+          {% endif %}
+        </div>
+
+        <button type="submit"> Create </button>
+      </form>
+
+      <!-- Display all channels/joined channels (incomplete)-->
+      <div id="all-channels">All</div>
+      <div id="joined-channels">Joined</div>
+
+      <!-- Search for channels -->
+      <form id="search-channels" action="{{ url_for('search') }}", method="post">
+        <input type="text" autocomplete=off placeholder="Search channels" name="searchquery" required>
+        <button type="submit">Go</button>
+      </form>
+
+      <!-- Sign out of application -->
+      <div id="signout"><a href="{{ url_for("signout") }}">Sign out</a></div>
+    </div>
+
+    <div id="channels-center">
+      <!-- Display channels -->
+      {% if empty %}
+      Channel does not exist
+      {% endif %}
+
+      <table id="channels-list">
+        {% for channel in channellist %}
+        <tr>
+          <td> <a href = "{{ url_for('channel', channelname=channel) }}">{{ channel }}</a> </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<html>
+<head>
+  <title>{{ channelname }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+  <style>
+  html, body{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    background-color: #f1f3f2;
+  }
+
+  #channel-header{
+    display: flex;
+    flex-direction: row;
+    height: 60px;
+    background-color: #272424;
+    text-align: center;
+    align-items: center;
+  }
+
+  #exit-channel{
+    width: min(10%, 60px);
+    padding-bottom: 10px;
+    z-index: 1;
+    font-size: 45px;
+    line-height: 80%;
+    color: #f1f3f2;
+    cursor: default;
+  }
+
+  #channel-name{
+    width: 100%;
+    font-size: 120%;
+    font-weight: bold;
+    color: #f1f3f2;
+  }
+
+  #channel-window {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 9px;
+    background-color: #c2d3da;
+  }
+
+  #reverse{
+    display: flex;
+    flex-direction: column-reverse;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .message {
+    align-self: flex-start;
+    word-break: break-word;
+    line-break: anywhere;
+  }
+
+  .message-bubble {
+    border-radius: 5px;
+    margin: 3px;
+    padding: 0px 10px 1px 10px;
+    background-color: #f1f3f2;
+    color: #272424;
+    overflow: hidden;
+  }
+
+  .message-time {
+    float: right;
+    color: #585a56;
+    font-size: 70%;
+  }
+
+  .dark {
+    background-color: #585a56;
+    color: #f1f3f2;
+  }
+
+  #channel-input {
+    height: 32px;
+    margin: 0px 5px;
+  }
+
+  #new-message {
+    display: flex;
+    flex-direction: row;
+  }
+
+  #input-text {
+    float: left;
+    height: 32px;
+    flex: 1;
+    border: 2px solid #585a56;
+    border-radius: 5px;
+    margin-right: 3px;
+    padding: 0px 10px;
+    color: #272424;
+  }
+
+  #input-text::placeholder{
+    color: #585a56;
+  }
+
+  #input-submit {
+    float: right;
+    height: 32px;
+    width: 60px;
+    border: none;
+    border-radius: 5px;
+    background-color: #585a56;
+    color: #f1f3f2;
+  }
+
+  #channel-footer {
+    height: 4%;
+    text-align: center;
+  }
+
+  #channel-footer a {
+    color: #585a56;
+  }
+
+  #channel-footer a:hover {
+    color: #c2d3da;
+    text-decoration: none;
+  }
+  </style>
+
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', ()=>{
+    var channelname = '{{ channelname }}';
+    var displayname = '{{ displayname }}';
+    var date = new Date();
+
+    // Create function to display messages
+    function displayMessage(message){
+      // Display sent and received messages in different colors
+      if (message.sent){
+        document.getElementById('channel-window').innerHTML += `<div class="message"> <div class="message-bubble">
+        ${message.displayname}: ${message.text} <br>
+        <span class="message-time">${message.time}</span>
+        </div>
+        </div>`;
+      }
+      else {
+        document.getElementById('channel-window').innerHTML += `<div class="message"> <div class="message-bubble dark">
+        ${message.displayname}: ${message.text} <br>
+        <span class="message-time dark">${message.time}</span>
+        </div>
+        </div>`;
+      }
+    }
+
+    // localStorage.removeItem(channelname)
+
+    // Check if channel data exist in local storage and if so display data.
+    if (!localStorage.getItem(channelname)){
+      localStorage.setItem(channelname, JSON.stringify([]));
+    }
+
+    var channeldata = JSON.parse(localStorage.getItem(channelname));
+
+
+    for (i = 0; i < channeldata.length; i++){
+      displayMessage(channeldata[i]);
+    }
+
+    // Disable send button by default
+    document.querySelector('#input-submit').disabled = true;
+    document.querySelector('#input-text').onkeyup = ()=>{
+      if (document.querySelector('#input-text').value.length>0)
+      document.querySelector('#input-submit').disabled = false;
+      else
+      document.querySelector('#input-submit').disabled = true;
+    };
+
+    // Connect to websocket
+    var socket = io.connect(location.protocol+'//'+document.domain+':'+location.port);
+
+    // When connected
+    socket.on('connect', ()=>{
+      document.querySelector('#new-message').onsubmit = ()=>{
+        const text = document.querySelector('#input-text').value;
+        const time = date.toLocaleString([], { hour:'2-digit', minute: '2-digit' });
+        socket.emit('send message', {'displayname':displayname, 'text':text, 'time':time});
+        document.querySelector('#input-text').value = '';
+        document.querySelector('#input-submit').disabled = true;
+        return false;
+      };
+    });
+
+    socket.on('new message', data=>{
+      // Record if data was sent or received
+      if (data.displayname == displayname){
+        data['sent'] = true;
+      }
+      else {
+        data['sent'] = false;
+      }
+
+      // Display and save a maximum of 100 messages
+      displayMessage(data);
+      channeldata.push(data)
+
+      if (channeldata.length > 15){
+        const firstmessage = document.querySelector('.message');
+        firstmessage.parentNode.removeChild(firstmessage);
+        channeldata.shift();
+      }
+      localStorage.setItem(channelname, JSON.stringify(channeldata));
+    });
+
+    // Sign out of application
+    document.getElementById('exit-channel').onclick = ()=>{
+      window.location.href='{{ url_for("channels") }}'
+    }
+  });
+</script>
+</head>
+
+<body>
+  <div id="channel-header">
+    <span id="exit-channel">&#x2039;</span>
+    <span id="channel-name">{{ channelname }}</span>
+  </div>
+
+  <!-- Keep chat window scrolled to the bottom -->
+  <div id="reverse">
+    <div id="channel-window">
+    </div>
+  </div>
+
+  <div id="channel-input">
+    <form id="new-message">
+      <input id="input-text" type="text" autofocus placeholder="Type your message" autocomplete=off>
+      <button id="input-submit" type="submit">Send</button>
+    </form>
+  </div>
+
+  <div id="channel-footer">
+    <a href="{{ url_for("signout") }}">Sign out</a>
+  </div>
+</div>
+</body>
+</html>

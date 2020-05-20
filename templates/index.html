@@ -1,0 +1,61 @@
+<html>
+<head>
+  <title> Flack </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+  <style>
+    html, body {
+      position: relative;
+      height: 100%;
+      width: 100%;
+      background-color: #272424;
+    }
+
+    #index {
+      position: absolute;
+      top: 40%;
+      margin-left: 15px;
+    }
+
+    #index-title {
+      font-size: 400%;
+      color: #f1f3f2;
+    }
+
+    #new-signin input {
+      height: 32px;
+      border: none;
+      border-radius: 5px;
+      padding: 0px 8px;
+      color: #272424;
+    }
+
+    #new-signin input input::placeholder {
+      color: #585a56;
+    }
+
+    #new-signin button {
+      height: 32px;
+      width: 60px;
+      border: none;
+      border-radius: 5px;
+      padding: 0px 5px;
+      font-weight: bold;
+      background-color: #c2d3da;
+      color: #272424;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="index">
+    <span id="index-title">Welcome to Flack</span>
+
+      <form id="new-signin" action="{{ url_for('index') }}", method="post">
+        <input type="text" name="displayname" autofocus placeholder="Enter display name" autocomplete=off required>
+        <button type="submit">Go</button><br><br>
+      </form>
+  </div>
+</body>
+</html>
